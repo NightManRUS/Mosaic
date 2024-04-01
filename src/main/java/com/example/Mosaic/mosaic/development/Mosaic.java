@@ -9,6 +9,17 @@ import java.util.Map;
 
 public class Mosaic {
 
+    // Определение базы данных плиток
+    public static Map<String, double[]> TILESDB = new HashMap<>();
+
+    // Клонирование базы данных плиток при каждой генерации фотомозаики
+    public static Map<String, double[]> cloneTilesDB() {
+        Map<String, double[]> db = new HashMap<>();
+        for (Map.Entry<String, double[]> entry : TILESDB.entrySet()) {
+            db.put(entry.getKey(), entry.getValue().clone());
+        }
+        return db;
+    }
 
     // ищем средний цвет картинки
     public static double[] averageColor(BufferedImage img){
