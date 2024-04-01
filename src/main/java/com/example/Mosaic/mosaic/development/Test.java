@@ -23,7 +23,7 @@ public class Test {
         try {
             // Укажите путь к вашему изображению
             BufferedImage inputImage = ImageIO.read(new File("src/main/java/com/example/Mosaic/images/img.jpg"));
-            int newWidth = 2000; // Новая ширина изображения
+            int newWidth = 200; // Новая ширина изображения
             BufferedImage resizedImage = Mosaic.resize(inputImage, newWidth);
             // Укажите путь для сохранения измененного изображения
             ImageIO.write(resizedImage, "PNG", new File("src/main/java/com/example/Mosaic/images/resizedImg.jpg"));
