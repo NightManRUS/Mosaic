@@ -28,12 +28,12 @@ public class Mosaic {
     }
 
     // ищем средний цвет картинки
-    public static double[] averageColor(BufferedImage img){
+    public static double[] averageColor(BufferedImage img) {
         int width = img.getWidth();
         int height = img.getHeight();
         double r = 0.0, g = 0.0, b = 0.0;
 
-        for (int y = 0; y < height; y++){
+        for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int rgb = img.getRGB(x, y);
 
@@ -49,6 +49,7 @@ public class Mosaic {
         double totalPixels = width * height;
         return new double[]{r / totalPixels, g / totalPixels, b / totalPixels};
     }
+
     // изменяем размер изображения на новое значение newWidth
     public static BufferedImage resize(BufferedImage inputImg, int newWidth) {
         int width = inputImg.getWidth();
@@ -74,7 +75,7 @@ public class Mosaic {
                 if (stepY > (int) (height / ratio))
                     stepY--;
 
-                outputImg.setRGB((int) stepX , (int) stepY,
+                outputImg.setRGB((int) stepX, (int) stepY,
                         (alpha << 24) | (red << 16) | (green << 8) | blue);
 
             }
@@ -85,7 +86,8 @@ public class Mosaic {
     }
 
     // объявляем tilesDB в памяти (храним название картинки и значение RGB)
-    public static Map<String, double[]> tilesDB(String path) {
+    public static void tilesDB(String path) {
+        System.out.println(path);
         System.out.println("Start populating tiles db ...");
         Map<String, double[]> db = new HashMap<>();
         File[] files = new File(path).listFiles();
@@ -107,11 +109,11 @@ public class Mosaic {
         int count = 0;
         for (Map.Entry<String, double[]> f : db.entrySet()) {
             count++;
-            System.out.println(f.getValue()[0] + "," + f.getValue()[1] + "," +f.getValue()[2]  +"  "+ f.getKey() + "  " + count);
+            System.out.println(f.getValue()[0] + "," + f.getValue()[1] + "," + f.getValue()[2] + "  " + f.getKey() + "  " + count);
 
         }
 
-        return db;
+        TILESDB = db;
     }
 
     // ищет максимально близко совпадающее изображение
@@ -128,9 +130,6 @@ public class Mosaic {
                 smallest = dist;
             }
 
-        }
-        if (fileName != null) {
-            db.remove(fileName);
         }
         return fileName;
 
@@ -160,14 +159,20 @@ public class Mosaic {
             for (int y = y1; y < y2; y += tileSize) {
                 for (int x = x1; x < x2; x += tileSize) {
                     // Получаем цвет пикселя из оригинального изображения.
-                    int[] rgba = new int[4];
-                    original.getRaster().getPixel(x, y, rgba);
-                    double[] color = {rgba[0], rgba[1], rgba[2]};
+                    int rgba = original.getRGB(x,y);
+
+                    // Извлекаем красный (R), зеленый (G) и синий (B) каналы
+                    int red = (rgba >> 16) & 0xFF; // Красный канал
+                    int green = (rgba >> 8) & 0xFF; // Зеленый канал
+                    int blue = rgba & 0xFF; // Синий канал
+
+                    double[] color = {red, green, blue};
                     // Находим ближайшую плитку в базе данных.
-                    String nearest = nearest(color, db);
+                    String nearestTile = nearest(color, db);
                     try {
                         // Читаем изображение выбранной плитки из файла.
-                        BufferedImage img = ImageIO.read(new File(nearest));
+
+                        BufferedImage img = ImageIO.read(new File(nearestTile));
                         // Изменяем размер плитки на заданный tileSize.
                         BufferedImage resizedTile = resize(img, tileSize);
                         // Рисуем измененную плитку на новом изображении.
@@ -190,9 +195,9 @@ public class Mosaic {
 
 
     // Функция для комбинирования изображений из четырех каналов в одно изображение
-    public static BlockingQueue<BufferedImage> combine(Rectangle rectangle,BlockingQueue<BufferedImage> c1,
-                                                BlockingQueue<BufferedImage> c2, BlockingQueue<BufferedImage> c3,
-                                                BlockingQueue<BufferedImage> c4) {
+    public static BlockingQueue<BufferedImage> combine(Rectangle rectangle, BlockingQueue<BufferedImage> c1,
+                                                       BlockingQueue<BufferedImage> c2, BlockingQueue<BufferedImage> c3,
+                                                       BlockingQueue<BufferedImage> c4) {
         BlockingQueue<BufferedImage> resultBlockingQueue = new LinkedBlockingQueue<>(); // Создаем блокирующую очередь для результата
         new Thread(() -> { // Создаем новый поток для обработки изображений
             try {

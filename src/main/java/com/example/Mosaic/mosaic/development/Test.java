@@ -3,6 +3,8 @@ package com.example.Mosaic.mosaic.development;
 import javax.imageio.ImageIO;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -51,20 +53,51 @@ public class Test {
     }
 
     private static void createAndShowGUI() {
-        JFrame frame = new JFrame("Пример JFrame с кнопкой");
+        JFrame frame = new JFrame("Создание мозайки");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 400);
 
+        //Создание панели
         JPanel panel = new JPanel();
-        panel.setLayout(new FlowLayout());
+        panel.setLayout(new GridLayout(2, 1));
         panel.setSize(400, 400);
 
+        // Создание кнопки выбора файла
         String inputFileButtonName = "Выбрать файл";
         JButton inputFileButton = new JButton(inputFileButtonName);
-
-        inputFileButton.addActionListener(new OperationButtonClickListener(inputFileButtonName));
-
+        JLabel inputFileLabel = new JLabel("Файл не выбран");
+        inputFileButton.addActionListener(new OperationButtonClickListener(inputFileButtonName, inputFileLabel));
         panel.add(inputFileButton);
+        panel.add(inputFileLabel);
+
+        panel.setLayout(new GridLayout(6, 2));
+
+        //Создаем выподающий список с шаблонами
+        JLabel templateLabel = new JLabel("Выберите шаблон:");
+        Choice templateChoice = new Choice(); // Добавляем элементы в выпадающий список
+        String templatePath = ""; //Путь к выбранному шаблону
+        templateChoice.add("Цветы");
+        templateChoice.add("SomeThing");
+        templateChoice.select(0);// Устанавливаем начальное выбранное значение
+        // Добавляем слушателя событий для выбора элементов в списке
+        templateChoice.addItemListener(new OperationChoiceListener(templateChoice.getSelectedItem()));
+        panel.add(templateLabel);
+        panel.add(templateChoice);
+
+
+        //Создаем поле для ввода размера tiles
+        JLabel tileSizeLabel = new JLabel("Введите размер элемента мозайк:");
+        JTextField tileSizeField = new JTextField();
+        panel.add(tileSizeLabel);
+        panel.add(tileSizeField);
+
+
+        //Создание кнопки Создать мозайку
+        String createMosaicButtonName = "Создать мозайку";
+        JButton createMosaic = new JButton(createMosaicButtonName);
+        createMosaic.addActionListener(new OperationButtonClickListener(createMosaicButtonName, tileSizeField));
+        panel.add(createMosaic);
+
         frame.add(panel);
         frame.setVisible(true);
     }
