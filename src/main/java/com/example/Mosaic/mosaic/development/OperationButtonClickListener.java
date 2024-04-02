@@ -63,14 +63,12 @@ public class OperationButtonClickListener implements ActionListener {
                     System.out.println(inputFileName);
                     BufferedImage inputImage = ImageIO.read(new File(inputFileName));
                     BufferedImage resultImg = Mosaic.mosaic(inputImage, Integer.parseInt(tileSizeField.getText()));
-//                    String filePath = "C:/Users/Kirill/Desktop/РГРТУ/3 курс/2 семестр/НИР/Результат/result.jpg";
-//                    File outputFile = new File(filePath);
                     try {
-                        // Сохраняем изображение в файл с помощью ImageIO
-//                        ImageIO.write(resultImg, "jpg", outputFile);
-                        ImageIO.write(resultImg, "PNG", new File("src/main/java/com/example/Mosaic/images/resizedImg.jpg"));
-                        System.out.println(resultImg.getHeight() + "  " + resultImg.getWidth());
-                        System.out.println("Изображение успешно сохранено в файл: src/main/java/com/example/Mosaic/images/resizedImg.jpg");
+                        ImageIO.write(resultImg, "PNG", new File(
+                                "src/main/java/com/example/Mosaic/images/resizedImg.jpg"));
+                        System.out.println("Разрешение изображения: " + resultImg.getHeight() + "х" + resultImg.getWidth());
+                        System.out.println("Изображение успешно сохранено в файл: " +
+                                "src/main/java/com/example/Mosaic/images/resizedImg.jpg");
 
                     } catch (IOException ex3) {
                         // Если произошла ошибка при сохранении изображения, выводим сообщение об ошибке

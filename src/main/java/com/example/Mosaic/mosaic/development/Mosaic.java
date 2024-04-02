@@ -107,11 +107,11 @@ public class Mosaic {
         System.out.println("Finished populating tiles db.");
 
         int count = 0;
-        for (Map.Entry<String, double[]> f : db.entrySet()) {
-            count++;
-            System.out.println(f.getValue()[0] + "," + f.getValue()[1] + "," + f.getValue()[2] + "  " + f.getKey() + "  " + count);
-
-        }
+//        for (Map.Entry<String, double[]> f : db.entrySet()) {
+//            count++;
+//            System.out.println(f.getValue()[0] + "," + f.getValue()[1] + "," + f.getValue()[2] + "  " + f.getKey() + "  " + count);
+//
+//        }
 
         TILESDB = db;
     }
@@ -156,10 +156,10 @@ public class Mosaic {
             Graphics2D g2d = newImage.createGraphics();
 
             // Проходим по всем координатам изображения с шагом равным размеру плитки.
-            for (int y = y1; y < y2; y += tileSize) {
-                for (int x = x1; x < x2; x += tileSize) {
+            for (int y = 0; y < y2; y += tileSize) {
+                for (int x = 0; x < x2; x += tileSize) {
                     // Получаем цвет пикселя из оригинального изображения.
-                    int rgba = original.getRGB(x,y);
+                    int rgba = original.getRGB(x, y);
 
                     // Извлекаем красный (R), зеленый (G) и синий (B) каналы
                     int red = (rgba >> 16) & 0xFF; // Красный канал
@@ -176,7 +176,8 @@ public class Mosaic {
                         // Изменяем размер плитки на заданный tileSize.
                         BufferedImage resizedTile = resize(img, tileSize);
                         // Рисуем измененную плитку на новом изображении.
-                        g2d.drawImage(resizedTile, x, y, null);
+                        g2d.drawImage(resizedTile, x - x1, y - y1, null);
+
                     } catch (IOException e) {
                         System.out.println("Error: " + e.getMessage());
                     }
@@ -250,7 +251,7 @@ public class Mosaic {
         return resultBlockingQueue; // Возвращаем результативную очередь
     }
 
-    public static BufferedImage mosaic(BufferedImage img, int tileSize) throws InterruptedException {
+    public static BufferedImage mosaic(BufferedImage img, int tileSize) throws InterruptedException, IOException {
         long t0 = System.currentTimeMillis();
 
         // Получаем размеры оригинального изображения
@@ -260,13 +261,13 @@ public class Mosaic {
         // Клонируем базу данных плиток
         Map<String, double[]> db = cloneTilesDB();
 
+        Rectangle rect = new Rectangle(0, 0, width, height);
+
         // Разделяем оригинальное изображение на четыре части
         BlockingQueue<BufferedImage> c1 = cutWithChannel(img, db, tileSize, 0, 0, width / 2, height / 2);
         BlockingQueue<BufferedImage> c2 = cutWithChannel(img, db, tileSize, width / 2, 0, width, height / 2);
         BlockingQueue<BufferedImage> c3 = cutWithChannel(img, db, tileSize, 0, height / 2, width / 2, height);
         BlockingQueue<BufferedImage> c4 = cutWithChannel(img, db, tileSize, width / 2, height / 2, width, height);
-
-        Rectangle rect = new Rectangle(0, 0, width, height);
 
         // Соединяем полученные изображения
         BufferedImage result = combine(rect, c1, c2, c3, c4).take();
@@ -274,7 +275,7 @@ public class Mosaic {
         long t1 = System.currentTimeMillis();
 
         // Выводим результаты обработки
-        System.out.println("Duration: " + (t1 - t0) + " ms");
+        System.out.println("Продолжительность: " + (t1 - t0) + " ms");
 
         // Возвращаем результаты обработки
         return result;
