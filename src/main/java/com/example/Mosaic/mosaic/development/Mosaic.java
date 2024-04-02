@@ -66,19 +66,6 @@ public class Mosaic {
                 int green = (rgb >> 8) & 0xFF;
                 int blue = (rgb) & 0xFF;
 
-    // Определение базы данных плиток
-    public static Map<String, double[]> TILESDB = new HashMap<>();
-
-    // Клонирование базы данных плиток при каждой генерации фотомозаики
-    public static Map<String, double[]> cloneTilesDB() {
-        Map<String, double[]> db = new HashMap<>();
-        for (Map.Entry<String, double[]> entry : TILESDB.entrySet()) {
-            db.put(entry.getKey(), entry.getValue().clone());
-        }
-        return db;
-    }
-
-
                 stepX = (x / ratio);
                 if (stepX > (int) (newWidth))
                     stepX--;
