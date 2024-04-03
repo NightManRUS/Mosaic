@@ -3,7 +3,6 @@ package com.example.Mosaic.mosaic.development;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,7 +10,6 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.awt.Graphics2D;
-import java.util.concurrent.TimeUnit;
 
 public class Mosaic {
 
