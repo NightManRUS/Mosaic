@@ -58,7 +58,7 @@ public class OperationButtonClickListener implements ActionListener {
 
             //Если нажата кнопка Создать мозайку
             case "Создать мозайку":
-                Mosaic.cloneTilesDB();
+                TilesDBManager.cloneTilesDB();
                 try {
                     System.out.println(inputFileName);
                     BufferedImage inputImage = ImageIO.read(new File(inputFileName));

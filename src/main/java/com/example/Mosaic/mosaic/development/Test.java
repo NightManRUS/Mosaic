@@ -8,6 +8,10 @@ public class Test {
 
     public static void main(String[] args) {
 
+//        String templatePath = Template.FLOWERS.getTemplate();
+//        TilesDBManager.tilesDB(templatePath);
+//        TilesDBManager.writeTilesBD(TilesDBManager.TILESDB, "Flowers.txt");
+
         createAndShowGUI();
     }
 
@@ -46,7 +50,7 @@ public class Test {
 
 
         //Создаем поле для ввода размера tiles
-        JLabel tileSizeLabel = new JLabel("Введите размер элемента мозайк:");
+        JLabel tileSizeLabel = new JLabel("Введите размер элемента мозайки:");
         JTextField tileSizeField = new JTextField();
         panel.add(tileSizeLabel);
         panel.add(tileSizeField);

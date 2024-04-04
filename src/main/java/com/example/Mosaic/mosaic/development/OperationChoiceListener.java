@@ -19,9 +19,18 @@ public class OperationChoiceListener implements ItemListener {
         // Обработка выбора элемента
         selectedTemplate = templateChoice.getSelectedItem();
         switch (selectedTemplate) {
+            //кейсы для выбора шаблона
             case "Цветы":
-                templatePath = Template.FLOWERS.getTemplate();
-                Mosaic.tilesDB(templatePath);
+                //считывание tilesBD из файла
+                TilesDBManager.TILESDB = TilesDBManager.readTilesDB("Flowers.txt");
+
+                //Если файл не существует то создать и записать в файл tilesDB
+                if(TilesDBManager.TILESDB == null){
+                    templatePath = Template.FLOWERS.getTemplate();
+                    TilesDBManager.tilesDB(templatePath);
+                    TilesDBManager.writeTilesBD(TilesDBManager.TILESDB, "Flowers.txt");
+                }
+
                 break;
             case "SomeThing":
                 templatePath = Template.SOMETHING.getTemplate();

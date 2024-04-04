@@ -13,17 +13,6 @@ import java.awt.Graphics2D;
 
 public class Mosaic {
 
-    // Определение базы данных плиток
-    public static Map<String, double[]> TILESDB = new HashMap<>();
-
-    // Клонирование базы данных плиток при каждой генерации фотомозаики
-    public static Map<String, double[]> cloneTilesDB() {
-        Map<String, double[]> db = new HashMap<>();
-        for (Map.Entry<String, double[]> entry : TILESDB.entrySet()) {
-            db.put(entry.getKey(), entry.getValue().clone());
-        }
-        return db;
-    }
 
     // ищем средний цвет картинки
     public static double[] averageColor(BufferedImage img) {
@@ -83,36 +72,7 @@ public class Mosaic {
         return outputImg;
     }
 
-    // объявляем tilesDB в памяти (храним название картинки и значение RGB)
-    public static void tilesDB(String path) {
-        System.out.println(path);
-        System.out.println("Start populating tiles db ...");
-        Map<String, double[]> db = new HashMap<>();
-        File[] files = new File(path).listFiles();
-        if (files != null) {
-            for (File f : files) {
-                String name = path + "/" + f.getName();
-                try {
-                    BufferedImage img = ImageIO.read(new File(name));
-                    db.put(name, averageColor(img));
-                } catch (IOException e) {
-                    System.out.println("Error: " + e.getMessage() + " " + name);
-                }
-            }
-        } else {
-            System.out.println("Error: cannot open directory 'tiles'");
-        }
-        System.out.println("Finished populating tiles db.");
 
-        int count = 0;
-//        for (Map.Entry<String, double[]> f : db.entrySet()) {
-//            count++;
-//            System.out.println(f.getValue()[0] + "," + f.getValue()[1] + "," + f.getValue()[2] + "  " + f.getKey() + "  " + count);
-//
-//        }
-
-        TILESDB = db;
-    }
 
     // ищет максимально близко совпадающее изображение
     public static String nearest(double[] target, Map<String, double[]> db) {
@@ -152,6 +112,8 @@ public class Mosaic {
             // Создаем новое изображение, которое будет содержать результат обработки.
             BufferedImage newImage = new BufferedImage(x2 - x1, y2 - y1, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = newImage.createGraphics();
+
+            int imgRatio = tileSize / 2; //соотношение входного изображения от выходного
 
             // Проходим по всем координатам изображения с шагом равным размеру плитки.
             for (int y = 0; y < y2; y += tileSize) {
@@ -257,7 +219,7 @@ public class Mosaic {
         int height = img.getHeight();
 
         // Клонируем базу данных плиток
-        Map<String, double[]> db = cloneTilesDB();
+        Map<String, double[]> db = TilesDBManager.TILESDB;
 
         Rectangle rect = new Rectangle(0, 0, width, height);
 
