@@ -38,7 +38,6 @@ public class Test {
         //Создаем выподающий список с шаблонами
         JLabel templateLabel = new JLabel("Выберите шаблон:");
         Choice templateChoice = new Choice(); // Добавляем элементы в выпадающий список
-        String templatePath = ""; //Путь к выбранному шаблону
         templateChoice.add("");
         templateChoice.add("Цветы");
         templateChoice.add("SomeThing");
@@ -55,6 +54,22 @@ public class Test {
         panel.add(tileSizeLabel);
         panel.add(tileSizeField);
 
+
+        //Создаем выподающий список с шаблонами
+        JLabel mosaicSizeLabel = new JLabel("Выберите шаблон:");
+        Choice mosaicSizeChoice = new Choice(); // Добавляем элементы в выпадающий список
+        mosaicSizeChoice.add("");
+        mosaicSizeChoice.add("Оригинал");
+        mosaicSizeChoice.add("2 мегапикс. = 1920x1080");
+        mosaicSizeChoice.add("6 мегапикс. = 3326x1871");
+        mosaicSizeChoice.add("13 мегапикс. = 4096×3072");
+        mosaicSizeChoice.add("24 мегапикс. = 7680x3148");
+        mosaicSizeChoice.add("62 мегапикс. = 12288x5036");
+        mosaicSizeChoice.select(0);// Устанавливаем начальное выбранное значение
+        // Добавляем слушателя событий для выбора элементов в списке
+        mosaicSizeChoice.addItemListener(new OperationChoiceListener(mosaicSizeChoice));
+        panel.add(mosaicSizeLabel);
+        panel.add(mosaicSizeChoice);
 
         //Создание кнопки Создать мозайку
         String createMosaicButtonName = "Создать мозайку";

@@ -6,6 +6,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Queue;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -13,6 +15,26 @@ import java.awt.Graphics2D;
 
 public class Mosaic {
 
+    //размер мозайки в пикселях
+    public static int mosaicSize = 0;
+
+    //Минимальное расстояние между одинаковыми картинками
+    public static int minDistanceBetweenIdenticalImages = 0;
+
+    //найти соотношение изображений
+    private static int getMosaicSizeRatio(BufferedImage inputImg) {
+        if (Mosaic.mosaicSize == 0) {
+            return 1;
+        } else {
+            double ratio =  Math.sqrt((double)(mosaicSize / (inputImg.getHeight() * inputImg.getWidth())));
+            if (ratio >= 1){
+                return (int) Math.round(ratio);
+            } else{
+                return 1;
+            }
+
+        }
+    }
 
     // ищем средний цвет картинки
     public static double[] averageColor(BufferedImage img) {
@@ -73,7 +95,6 @@ public class Mosaic {
     }
 
 
-
     // ищет максимально близко совпадающее изображение
     public static String nearest(double[] target, Map<String, double[]> db) {
         String fileName = null;
@@ -105,19 +126,19 @@ public class Mosaic {
 
     // Функция обрезки изображения с использованием блокирующей очереди
     public static BlockingQueue<BufferedImage> cutWithChannel(BufferedImage original, Map<String,
-            double[]> db, int tileSize, int x1, int y1, int x2, int y2) {
+            double[]> db, int tileSize, int mosaicSizeRatio, int x1, int y1, int x2, int y2) {
         BlockingQueue<BufferedImage> queue = new LinkedBlockingQueue<>();
         // Создаем новый поток для обработки изображения.
         new Thread(() -> {
             // Создаем новое изображение, которое будет содержать результат обработки.
-            BufferedImage newImage = new BufferedImage(x2 - x1, y2 - y1, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage newImage = new BufferedImage(((x2 - x1) * mosaicSizeRatio),
+                    ((y2 - y1) * mosaicSizeRatio), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = newImage.createGraphics();
 
-            int imgRatio = tileSize / 2; //соотношение входного изображения от выходного
 
             // Проходим по всем координатам изображения с шагом равным размеру плитки.
-            for (int y = 0; y < y2; y += tileSize) {
-                for (int x = 0; x < x2; x += tileSize) {
+            for (int y = 0, tileY = 0; y < y2; y += (tileSize / mosaicSizeRatio), tileY += tileSize) {
+                for (int x = 0, tileX = 0; x < x2; x += (tileSize / mosaicSizeRatio), tileX += tileSize) {
                     // Получаем цвет пикселя из оригинального изображения.
                     int rgba = original.getRGB(x, y);
 
@@ -127,6 +148,7 @@ public class Mosaic {
                     int blue = rgba & 0xFF; // Синий канал
 
                     double[] color = {red, green, blue};
+
                     // Находим ближайшую плитку в базе данных.
                     String nearestTile = nearest(color, db);
                     try {
@@ -136,7 +158,8 @@ public class Mosaic {
                         // Изменяем размер плитки на заданный tileSize.
                         BufferedImage resizedTile = resize(img, tileSize);
                         // Рисуем измененную плитку на новом изображении.
-                        g2d.drawImage(resizedTile, x - x1, y - y1, null);
+                        g2d.drawImage(resizedTile, (tileX - x1 * mosaicSizeRatio),
+                                (tileY - y1 * mosaicSizeRatio), null);
 
                     } catch (IOException e) {
                         System.out.println("Error: " + e.getMessage());
@@ -214,6 +237,9 @@ public class Mosaic {
     public static BufferedImage mosaic(BufferedImage img, int tileSize) throws InterruptedException, IOException {
         long t0 = System.currentTimeMillis();
 
+        // Получаем соотношение мозайки к оригинальному изображению
+        int mosaicSizeRatio = getMosaicSizeRatio(img);
+
         // Получаем размеры оригинального изображения
         int width = img.getWidth();
         int height = img.getHeight();
@@ -221,16 +247,24 @@ public class Mosaic {
         // Клонируем базу данных плиток
         Map<String, double[]> db = TilesDBManager.TILESDB;
 
-        Rectangle rect = new Rectangle(0, 0, width, height);
+        // Создание очереди с использованными картинками для минимального
+        // расстояния между одинаковыми картинками
+        Queue<String> usedImagesQueue = new LinkedList<>();
 
         // Разделяем оригинальное изображение на четыре части
-        BlockingQueue<BufferedImage> c1 = cutWithChannel(img, db, tileSize, 0, 0, width / 2, height / 2);
-        BlockingQueue<BufferedImage> c2 = cutWithChannel(img, db, tileSize, width / 2, 0, width, height / 2);
-        BlockingQueue<BufferedImage> c3 = cutWithChannel(img, db, tileSize, 0, height / 2, width / 2, height);
-        BlockingQueue<BufferedImage> c4 = cutWithChannel(img, db, tileSize, width / 2, height / 2, width, height);
+        BlockingQueue<BufferedImage> c1 = cutWithChannel(img, db, tileSize, mosaicSizeRatio,
+                0, 0, width / 2, height / 2);
+        BlockingQueue<BufferedImage> c2 = cutWithChannel(img, db, tileSize, mosaicSizeRatio,
+                width / 2, 0, width, height / 2);
+        BlockingQueue<BufferedImage> c3 = cutWithChannel(img, db, tileSize, mosaicSizeRatio,
+                0, height / 2, width / 2, height);
+        BlockingQueue<BufferedImage> c4 = cutWithChannel(img, db, tileSize, mosaicSizeRatio,
+                width / 2, height / 2, width, height);
 
+        Rectangle combineRect = new Rectangle(0, 0, (width * mosaicSizeRatio),
+                (height * mosaicSizeRatio));
         // Соединяем полученные изображения
-        BufferedImage result = combine(rect, c1, c2, c3, c4).take();
+        BufferedImage result = combine(combineRect, c1, c2, c3, c4).take();
 
         long t1 = System.currentTimeMillis();
 
