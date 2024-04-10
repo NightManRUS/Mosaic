@@ -123,17 +123,6 @@ public class Mosaic {
 
         }
 
-        // Если в очереди меньше элементов чем задданное расстояние,
-        // то добавляем элемент в конец очереди
-        if(usedImagesQueue.size() < minDistanceBetweenIdenticalImages){
-            usedImagesQueue.offer(fileName);
-
-        // Иначе добавляем элемент в конец очереди и удаляем элемент в начале очереди
-        } else if ((usedImagesQueue.size() == minDistanceBetweenIdenticalImages)
-                && (minDistanceBetweenIdenticalImages != 0)) {
-            usedImagesQueue.poll();
-            usedImagesQueue.offer(fileName);
-        }
         return fileName;
     }
 
@@ -159,13 +148,16 @@ public class Mosaic {
                     ((y2 - y1) * mosaicSizeRatio), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = newImage.createGraphics();
 
+            // Создаем массив для хранения адресов картинок
+            String[][] tileMatrix = new String[(y2-y1)][(x2-x1)];
+
             // Создание очереди с использованными картинками для минимального
             // расстояния между одинаковыми картинками
             Queue<String> usedImagesQueue = new LinkedList<>();
 
             // Проходим по всем координатам изображения с шагом равным размеру плитки.
-            for (int y = 0, tileY = 0; y < y2; y += (tileSize / mosaicSizeRatio), tileY += tileSize) {
-                for (int x = 0, tileX = 0; x < x2; x += (tileSize / mosaicSizeRatio), tileX += tileSize) {
+            for (int y = 0, tileY = 0, i = 0; y < y2; y += (tileSize / mosaicSizeRatio), tileY += tileSize, i++) {
+                for (int x = 0, tileX = 0, j = 0; x < x2; x += (tileSize / mosaicSizeRatio), tileX += tileSize, j++) {
                     // Получаем цвет пикселя из оригинального изображения.
                     int rgba = original.getRGB(x, y);
 
@@ -175,9 +167,22 @@ public class Mosaic {
                     int blue = rgba & 0xFF; // Синий канал
 
                     double[] color = {red, green, blue};
+                    //Добавляем в очередь использованные поблизости картинки
+                    for (int k = i + minDistanceBetweenIdenticalImages; k >= i-minDistanceBetweenIdenticalImages; k--){
+                        for (int l = j + minDistanceBetweenIdenticalImages; l >= j-minDistanceBetweenIdenticalImages; l--){
+                            if (k < 0 || l < 0) {
+                                continue;
+                            }
+                            usedImagesQueue.offer(tileMatrix[k][l]);
+                        }
+                    }
 
                     // Находим ближайшую плитку в базе данных.
                     String nearestTile = nearest(color, db, usedImagesQueue);
+                    // Добавляем адрес подходящей плитки в массив с адресами плиток
+                    tileMatrix[i][j] = nearestTile;
+                    //Очищаем оцередь с адресами плиток поблизости
+                    usedImagesQueue.clear();
                     try {
                         // Читаем изображение выбранной плитки из файла.
 
