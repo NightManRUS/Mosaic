@@ -15,6 +15,7 @@ public class OperationButtonClickListener implements ActionListener {
     public String buttonName; // Название нажатой кнопки
     public JLabel label;
     public JTextField tileSizeField;
+    public JTextField minDistanceField;
 
     public OperationButtonClickListener(String buttonName) {
         this.buttonName = buttonName;
@@ -27,9 +28,10 @@ public class OperationButtonClickListener implements ActionListener {
     }
 
     //Перегрузка класса для кнопки Создать мозаику
-    public OperationButtonClickListener(String buttonName, JTextField tileSizeField) {
+    public OperationButtonClickListener(String buttonName, JTextField tileSizeField, JTextField minDistanceField) {
         this.buttonName = buttonName;
         this.tileSizeField = tileSizeField;
+        this.minDistanceField = minDistanceField;
     }
 
     @Override
@@ -62,6 +64,8 @@ public class OperationButtonClickListener implements ActionListener {
                 try {
                     System.out.println(inputFileName);
                     BufferedImage inputImage = ImageIO.read(new File(inputFileName));
+                    // Задаем размер минимального расстояния между одинаковыми картинками
+                    Mosaic.minDistanceBetweenIdenticalImages = Integer.parseInt(minDistanceField.getText());
                     BufferedImage resultImg = Mosaic.mosaic(inputImage, Integer.parseInt(tileSizeField.getText()));
                     try {
                         ImageIO.write(resultImg, "PNG", new File(

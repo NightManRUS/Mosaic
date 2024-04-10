@@ -5,10 +5,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Queue;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.awt.Graphics2D;
@@ -26,10 +23,10 @@ public class Mosaic {
         if (Mosaic.mosaicSize == 0) {
             return 1;
         } else {
-            double ratio =  Math.sqrt((double)(mosaicSize / (inputImg.getHeight() * inputImg.getWidth())));
-            if (ratio >= 1){
+            double ratio = Math.sqrt((double) (mosaicSize / (inputImg.getHeight() * inputImg.getWidth())));
+            if (ratio >= 1) {
                 return (int) Math.round(ratio);
-            } else{
+            } else {
                 return 1;
             }
 
@@ -96,22 +93,48 @@ public class Mosaic {
 
 
     // ищет максимально близко совпадающее изображение
-    public static String nearest(double[] target, Map<String, double[]> db) {
+    public static String nearest(double[] target, Map<String, double[]> db, Queue<String> usedImagesQueue) {
         String fileName = null;
         double smallest = 1000000.0;
+        boolean identical;
 
         for (Map.Entry<String, double[]> entry : db.entrySet()) {
             double[] value = entry.getValue();
             double dist = distance(target, value);
+            identical = false;
 
             if (dist < smallest) {
-                fileName = entry.getKey();
-                smallest = dist;
+                //Проверка на совпадение картинки с кортинкой в очереди
+                for (String element : usedImagesQueue) {
+                    if (Objects.equals(entry.getKey(), element)) {
+                        identical = true;
+                        break;
+                    }
+                }
+
+                // Если картинки разные то объявляем картинку ближайшей
+                if (!identical) {
+                    fileName = entry.getKey();
+                    smallest = dist;
+                } else {
+                    continue;
+                }
             }
 
         }
-        return fileName;
 
+        // Если в очереди меньше элементов чем задданное расстояние,
+        // то добавляем элемент в конец очереди
+        if(usedImagesQueue.size() < minDistanceBetweenIdenticalImages){
+            usedImagesQueue.offer(fileName);
+
+        // Иначе добавляем элемент в конец очереди и удаляем элемент в начале очереди
+        } else if ((usedImagesQueue.size() == minDistanceBetweenIdenticalImages)
+                && (minDistanceBetweenIdenticalImages != 0)) {
+            usedImagesQueue.poll();
+            usedImagesQueue.offer(fileName);
+        }
+        return fileName;
     }
 
     // возвращает Евклидово расстояние между двумя точками
@@ -125,8 +148,9 @@ public class Mosaic {
     }
 
     // Функция обрезки изображения с использованием блокирующей очереди
-    public static BlockingQueue<BufferedImage> cutWithChannel(BufferedImage original, Map<String,
-            double[]> db, int tileSize, int mosaicSizeRatio, int x1, int y1, int x2, int y2) {
+    public static BlockingQueue<BufferedImage> cutWithChannel(BufferedImage original, Map<String, double[]> db,
+                                                              int tileSize, int mosaicSizeRatio,
+                                                              int x1, int y1, int x2, int y2) {
         BlockingQueue<BufferedImage> queue = new LinkedBlockingQueue<>();
         // Создаем новый поток для обработки изображения.
         new Thread(() -> {
@@ -135,6 +159,9 @@ public class Mosaic {
                     ((y2 - y1) * mosaicSizeRatio), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = newImage.createGraphics();
 
+            // Создание очереди с использованными картинками для минимального
+            // расстояния между одинаковыми картинками
+            Queue<String> usedImagesQueue = new LinkedList<>();
 
             // Проходим по всем координатам изображения с шагом равным размеру плитки.
             for (int y = 0, tileY = 0; y < y2; y += (tileSize / mosaicSizeRatio), tileY += tileSize) {
@@ -150,7 +177,7 @@ public class Mosaic {
                     double[] color = {red, green, blue};
 
                     // Находим ближайшую плитку в базе данных.
-                    String nearestTile = nearest(color, db);
+                    String nearestTile = nearest(color, db, usedImagesQueue);
                     try {
                         // Читаем изображение выбранной плитки из файла.
 
@@ -247,9 +274,7 @@ public class Mosaic {
         // Клонируем базу данных плиток
         Map<String, double[]> db = TilesDBManager.TILESDB;
 
-        // Создание очереди с использованными картинками для минимального
-        // расстояния между одинаковыми картинками
-        Queue<String> usedImagesQueue = new LinkedList<>();
+
 
         // Разделяем оригинальное изображение на четыре части
         BlockingQueue<BufferedImage> c1 = cutWithChannel(img, db, tileSize, mosaicSizeRatio,

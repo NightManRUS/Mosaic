@@ -55,6 +55,13 @@ public class Test {
         panel.add(tileSizeField);
 
 
+        //Создаем поле для ввода минимального расстояния между одинаковыми картинками
+        JLabel minDistanceLabel = new JLabel("Минимальное расстояние между одинаковыми картинками:");
+        JTextField minDistanceField = new JTextField();
+        panel.add(minDistanceLabel);
+        panel.add(minDistanceField);
+
+
         //Создаем выподающий список с шаблонами
         JLabel mosaicSizeLabel = new JLabel("Выберите шаблон:");
         Choice mosaicSizeChoice = new Choice(); // Добавляем элементы в выпадающий список
@@ -74,7 +81,8 @@ public class Test {
         //Создание кнопки Создать мозайку
         String createMosaicButtonName = "Создать мозайку";
         JButton createMosaic = new JButton(createMosaicButtonName);
-        createMosaic.addActionListener(new OperationButtonClickListener(createMosaicButtonName, tileSizeField));
+        createMosaic.addActionListener(new OperationButtonClickListener(createMosaicButtonName,
+                tileSizeField, minDistanceField));
         panel.add(createMosaic);
 
         frame.add(panel);
